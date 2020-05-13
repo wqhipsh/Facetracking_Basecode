@@ -1,0 +1,41 @@
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
+
+public class NewBehaviourScript : MonoBehaviour
+{
+float previousvalue;
+
+StreamWriter writer;
+
+
+public int frameRate = 25;
+void Start()
+{
+writer = new StreamWriter("C:\\Users\\rb1619\\Desktop\\MyPath.txt", true);
+
+// Set the playback framerate (real time will not relate to game time after this).
+Time.captureFramerate = frameRate;
+
+previousvalue = 0;
+}
+
+// Update is called once per frame
+void Update()
+{
+float difference = (previousvalue - gameObject.transform.eulerAngles.y) * frameRate;
+
+Debug.Log(difference + " degree/sec");
+
+previousvalue = gameObject.transform.eulerAngles.y;
+
+writer.Write(difference+'\n');
+
+}
+
+void OnDisable()
+{
+writer.Close();
+}
+}
