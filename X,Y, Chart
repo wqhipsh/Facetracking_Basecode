@@ -1,0 +1,121 @@
+@ -2,6 +2,7 @@
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using UnityEngine;
+
+public class DataRecorder : MonoBehaviour
+@ -13,14 +14,46 @@ public class DataRecorder : MonoBehaviour
+
+    float previousvalueX;
+
+    float Right;
+
+    float Left;
+    
+    float Top;
+
+    float Down;
+
+    StreamWriter writer;
+
+    StreamWriter writerAverages;
+
+    public int frameRate = 25;
+
+
+    List<float> ListRight = new List<float>();
+
+    List<float> ListLeft = new List<float>();
+
+    List<float> ListTop = new List<float>();
+
+    List<float> ListDown =  new List<float>();
+
+    void Start()
+    {
+        writer = new StreamWriter(Application.dataPath+"\\data.csv", true);
+        string filename = "untitled";
+        string[] days ={"day1", "day2", "day3", "day4", "day4", "day5", "day6"};
+
+        foreach (string d in days) {
+
+            if (!File.Exists(Application.dataPath + d + ".csv")) {
+                filename = d + ".csv";
+                break;
+            }
+
+        }
+
+        writer = new StreamWriter(Application.dataPath+"\\"+filename, true);
+
+        writerAverages = new StreamWriter(Application.dataPath + "\\averages.csv", true);
+
+        Time.captureFramerate = frameRate;
+
+@ -28,23 +61,48 @@ public class DataRecorder : MonoBehaviour
+
+        previousvalueX = t.eulerAngles.x;
+
+        writer.WriteLine("time in s, up-down degree/sec, right-left degree/sec , eulerAngles.y, eulerAngles.x ");
+        writer.WriteLine("time in s, Left degree/sec, Right degree/sec , Top degree/sec, Down degree/sec ,eulerAngles.y, eulerAngles.x ");
+    }
+
+   
+    void Update()
+    {
+        float differenceY = Math.Abs(previousvalueY - Math.Abs(t.eulerAngles.y)) * frameRate;
+        Right = 0;
+        Left = 0;
+        Top = 0;
+        Down = 0;
+
+        float differenceY = (previousvalueY - Math.Abs(t.eulerAngles.y)) * frameRate;
+        float differenceX = (previousvalueX - Math.Abs(t.eulerAngles.x)) * frameRate;
+
+        if (differenceY > 0)
+        {
+            Left = Math.Abs(differenceY);
+            ListLeft.Add(Left);
+        }
+        else
+        {
+            Right = Math.Abs(differenceY);
+            ListRight.Add(Right);
+        }
+
+        float differenceX = Math.Abs(previousvalueX - Math.Abs(t.eulerAngles.x)) * frameRate;
+        if (differenceX > 0)
+        {
+            Top = Math.Abs(differenceX);
+            ListTop.Add(Top);
+        }
+        else
+        {
+            Down = Math.Abs(differenceX);
+            ListDown.Add(Down);
+        }
+
+        previousvalueY = Math.Abs(t.eulerAngles.y);
+
+        previousvalueX = Math.Abs(t.eulerAngles.x);
+
+        if ((differenceX != 0 && differenceX < 8000) || (differenceY != 0 && differenceY < 8000)) { 
+        if ((differenceX != 0 && Math.Abs(differenceX) < 8000) || (differenceY != 0 && Math.Abs(differenceY) < 8000)) { 
+
+            writer.WriteLine(Time.unscaledTime.ToString() +","+differenceX.ToString() + "," + differenceY.ToString() + "," + t.eulerAngles.y.ToString() + "," + t.eulerAngles.x.ToString());
+            writer.WriteLine(Time.unscaledTime.ToString() +","+Left.ToString() + "," + Right.ToString() + "," + Top.ToString() + "," + Down.ToString() + "," + t.eulerAngles.y.ToString() + "," + t.eulerAngles.x.ToString());
+
+        }
+
+@ -53,5 +111,9 @@ public class DataRecorder : MonoBehaviour
+    void OnDisable()
+    {
+        writer.Close();
+
+        writerAverages.WriteLine(ListLeft.Average().ToString() + "," + ListRight.Average().ToString() + "," + ListTop.Average().ToString() + "," + ListDown.Average().ToString());
+
+        writerAverages.Close();
+    }
+}
